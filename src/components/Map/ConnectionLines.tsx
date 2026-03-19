@@ -3,6 +3,7 @@ import { useCarreraStore } from '../../store/useCarreraStore'
 import { materias } from '../../data/materias'
 import { bezierPath, getElementRight, getElementLeft } from '../../utils/graphLayout'
 import { computeCriticalPath } from '../../utils/criticalPath'
+import { type EstadoMateria } from '../../types/materia'
 
 interface Connection {
   fromId: string
@@ -20,10 +21,15 @@ export function ConnectionLines({ containerRef }: ConnectionLinesProps) {
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 })
 
   const hoveredMateria = useCarreraStore((s) => s.hoveredMateria)
-  const getEstadoEfectivo = useCarreraStore((s) => s.getEstadoEfectivo)
   const estados = useCarreraStore((s) => s.estados)
   const estadosSimulados = useCarreraStore((s) => s.estadosSimulados)
+  const modoSimulacion = useCarreraStore((s) => s.modoSimulacion)
   const showCriticalPath = useCarreraStore((s) => s.showCriticalPath)
+
+  const getEstado = useCallback((id: string): EstadoMateria => {
+    if (modoSimulacion && id in estadosSimulados) return estadosSimulados[id]
+    return estados[id] ?? 'pendiente'
+  }, [estados, estadosSimulados, modoSimulacion])
 
   const computeConnections = useCallback(() => {
     const container = containerRef.current
@@ -58,11 +64,11 @@ export function ConnectionLines({ containerRef }: ConnectionLinesProps) {
     return () => { clearTimeout(timer); observer.disconnect() }
   }, [containerRef, computeConnections, estados, estadosSimulados])
 
-  const criticalPathIds = showCriticalPath ? computeCriticalPath(getEstadoEfectivo) : []
+  const criticalPathIds = showCriticalPath ? computeCriticalPath(getEstado) : []
   const criticalPathSet = new Set(criticalPathIds)
 
   const getLineStyle = (conn: Connection) => {
-    const reqEstado = getEstadoEfectivo(conn.fromId)
+    const reqEstado = getEstado(conn.fromId)
     if (conn.type === 'aprobada') {
       if (reqEstado === 'aprobada') return { stroke: '#10B981', dasharray: '' }
       if (reqEstado === 'regularizada' || reqEstado === 'cursando') return { stroke: '#F97316', dasharray: '6 4' }

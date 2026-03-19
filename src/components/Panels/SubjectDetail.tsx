@@ -12,14 +12,22 @@ const estadoOptions: { value: EstadoMateria; label: string }[] = [
 export function SubjectDetail() {
   const selectedMateria = useCarreraStore((s) => s.selectedMateria)
   const setSelected = useCarreraStore((s) => s.setSelected)
-  const getEstadoEfectivo = useCarreraStore((s) => s.getEstadoEfectivo)
   const setEstado = useCarreraStore((s) => s.setEstado)
+  // Subscribe to estados + estadosSimulados so we re-render on changes
+  const estados = useCarreraStore((s) => s.estados)
+  const estadosSimulados = useCarreraStore((s) => s.estadosSimulados)
+  const modoSimulacion = useCarreraStore((s) => s.modoSimulacion)
 
   if (!selectedMateria) return null
   const materia = materiasMap.get(selectedMateria)
   if (!materia) return null
 
-  const estado = getEstadoEfectivo(materia.id)
+  const getEstado = (id: string): EstadoMateria => {
+    if (modoSimulacion && id in estadosSimulados) return estadosSimulados[id]
+    return estados[id] ?? 'pendiente'
+  }
+
+  const estado = getEstado(materia.id)
   const habilita = materias.filter((m) => m.requiereCursadas.includes(materia.id) || m.requiereAprobadas.includes(materia.id))
   const impacto = habilita.length
 
@@ -57,7 +65,7 @@ export function SubjectDetail() {
                     {materia.requiereCursadas.map((reqId) => {
                       const req = materiasMap.get(reqId)
                       if (!req) return null
-                      const reqEstado = getEstadoEfectivo(reqId)
+                      const reqEstado = getEstado(reqId)
                       const cumple = reqEstado === 'cursando' || reqEstado === 'regularizada' || reqEstado === 'aprobada'
                       return <li key={reqId} className="flex items-center gap-2 text-xs dark:text-gray-300"><span className={cumple ? 'text-success' : 'text-danger'}>{cumple ? '✓' : '✗'}</span>{req.nombreCorto}</li>
                     })}
@@ -71,7 +79,7 @@ export function SubjectDetail() {
                     {materia.requiereAprobadas.map((reqId) => {
                       const req = materiasMap.get(reqId)
                       if (!req) return null
-                      const cumple = getEstadoEfectivo(reqId) === 'aprobada'
+                      const cumple = getEstado(reqId) === 'aprobada'
                       return <li key={reqId} className="flex items-center gap-2 text-xs dark:text-gray-300"><span className={cumple ? 'text-success' : 'text-danger'}>{cumple ? '✓' : '✗'}</span>{req.nombreCorto}</li>
                     })}
                   </ul>

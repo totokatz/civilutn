@@ -1,5 +1,6 @@
 import { type Materia } from '../../types/materia'
 import { useCarreraStore } from '../../store/useCarreraStore'
+import { makeGetEstado, computeDisponibilidad, computeRequisitos } from '../../hooks/useMateria'
 
 interface SubjectCardProps {
   materia: Materia
@@ -19,20 +20,19 @@ const disponibilidadOverride = {
 }
 
 export function SubjectCard({ materia }: SubjectCardProps) {
-  const getEstadoEfectivo = useCarreraStore((s) => s.getEstadoEfectivo)
-  const getDisponibilidad = useCarreraStore((s) => s.getDisponibilidad)
-  const getRequisitosCompletados = useCarreraStore((s) => s.getRequisitosCompletados)
   const cycleEstado = useCarreraStore((s) => s.cycleEstado)
   const setHovered = useCarreraStore((s) => s.setHovered)
   const setSelected = useCarreraStore((s) => s.setSelected)
   const hoveredMateria = useCarreraStore((s) => s.hoveredMateria)
   const searchQuery = useCarreraStore((s) => s.searchQuery)
+  const estados = useCarreraStore((s) => s.estados)
   const modoSimulacion = useCarreraStore((s) => s.modoSimulacion)
   const estadosSimulados = useCarreraStore((s) => s.estadosSimulados)
 
-  const estado = getEstadoEfectivo(materia.id)
-  const disponibilidad = getDisponibilidad(materia.id)
-  const { completados, total } = getRequisitosCompletados(materia.id)
+  const getEstado = makeGetEstado(estados, modoSimulacion, estadosSimulados)
+  const estado = getEstado(materia.id)
+  const disponibilidad = computeDisponibilidad(materia.id, getEstado)
+  const { completados, total } = computeRequisitos(materia.id, getEstado)
 
   const isPendiente = estado === 'pendiente'
   const config = isPendiente ? disponibilidadOverride[disponibilidad] : estadoConfig[estado]
@@ -44,7 +44,6 @@ export function SubjectCard({ materia }: SubjectCardProps) {
     materia.nombreCorto.toLowerCase().includes(searchQuery.toLowerCase())
 
   const isDimmed = (hoveredMateria && hoveredMateria !== materia.id) || (!isSearchMatch && searchQuery)
-
   const isSimulated = modoSimulacion && materia.id in estadosSimulados
 
   const minHeight = 80 + materia.horas * 6
