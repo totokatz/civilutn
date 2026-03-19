@@ -7,14 +7,20 @@ export function bezierPath(from: Point, to: Point): string {
   return `M ${from.x} ${from.y} C ${cp1x} ${from.y}, ${cp2x} ${to.y}, ${to.x} ${to.y}`
 }
 
-export function getElementRight(el: HTMLElement, container: HTMLElement): Point {
+export function getElementRight(el: HTMLElement, container: HTMLElement, zoom = 1): Point {
   const elRect = el.getBoundingClientRect()
   const containerRect = container.getBoundingClientRect()
-  return { x: elRect.right - containerRect.left, y: elRect.top - containerRect.top + elRect.height / 2 }
+  return {
+    x: (elRect.right - containerRect.left) / zoom,
+    y: (elRect.top - containerRect.top + elRect.height / 2) / zoom,
+  }
 }
 
-export function getElementLeft(el: HTMLElement, container: HTMLElement): Point {
+export function getElementLeft(el: HTMLElement, container: HTMLElement, zoom = 1): Point {
   const elRect = el.getBoundingClientRect()
   const containerRect = container.getBoundingClientRect()
-  return { x: elRect.left - containerRect.left, y: elRect.top - containerRect.top + elRect.height / 2 }
+  return {
+    x: (elRect.left - containerRect.left) / zoom,
+    y: (elRect.top - containerRect.top + elRect.height / 2) / zoom,
+  }
 }

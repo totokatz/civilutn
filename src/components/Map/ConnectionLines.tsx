@@ -14,13 +14,19 @@ interface Connection {
 
 interface ConnectionLinesProps {
   containerRef: RefObject<HTMLDivElement | null>
+  zoom: number
 }
 
-export function ConnectionLines({ containerRef }: ConnectionLinesProps) {
+function cumpleCursada(e: EstadoMateria) {
+  return e === 'cursando' || e === 'regularizada' || e === 'aprobada'
+}
+
+export function ConnectionLines({ containerRef, zoom }: ConnectionLinesProps) {
   const [connections, setConnections] = useState<Connection[]>([])
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 })
 
   const hoveredMateria = useCarreraStore((s) => s.hoveredMateria)
+  const pinnedMaterias = useCarreraStore((s) => s.pinnedMaterias)
   const estados = useCarreraStore((s) => s.estados)
   const estadosSimulados = useCarreraStore((s) => s.estadosSimulados)
   const modoSimulacion = useCarreraStore((s) => s.modoSimulacion)
@@ -34,9 +40,7 @@ export function ConnectionLines({ containerRef }: ConnectionLinesProps) {
   const computeConnections = useCallback(() => {
     const container = containerRef.current
     if (!container) return
-    const w = container.scrollWidth
-    const h = container.scrollHeight
-    setDimensions({ w, h })
+    setDimensions({ w: container.scrollWidth, h: container.scrollHeight })
     const newConnections: Connection[] = []
     for (const materia of materias) {
       const toEl = container.querySelector(`[data-materia-id="${materia.id}"]`) as HTMLElement | null
@@ -44,16 +48,22 @@ export function ConnectionLines({ containerRef }: ConnectionLinesProps) {
       for (const reqId of materia.requiereCursadas) {
         const fromEl = container.querySelector(`[data-materia-id="${reqId}"]`) as HTMLElement | null
         if (!fromEl) continue
-        newConnections.push({ fromId: reqId, toId: materia.id, type: 'cursada', path: bezierPath(getElementRight(fromEl, container), getElementLeft(toEl, container)) })
+        newConnections.push({
+          fromId: reqId, toId: materia.id, type: 'cursada',
+          path: bezierPath(getElementRight(fromEl, container, zoom), getElementLeft(toEl, container, zoom)),
+        })
       }
       for (const reqId of materia.requiereAprobadas) {
         const fromEl = container.querySelector(`[data-materia-id="${reqId}"]`) as HTMLElement | null
         if (!fromEl) continue
-        newConnections.push({ fromId: reqId, toId: materia.id, type: 'aprobada', path: bezierPath(getElementRight(fromEl, container), getElementLeft(toEl, container)) })
+        newConnections.push({
+          fromId: reqId, toId: materia.id, type: 'aprobada',
+          path: bezierPath(getElementRight(fromEl, container, zoom), getElementLeft(toEl, container, zoom)),
+        })
       }
     }
     setConnections(newConnections)
-  }, [containerRef])
+  }, [containerRef, zoom])
 
   useEffect(() => {
     const container = containerRef.current
@@ -62,35 +72,82 @@ export function ConnectionLines({ containerRef }: ConnectionLinesProps) {
     const observer = new ResizeObserver(computeConnections)
     observer.observe(container)
     return () => { clearTimeout(timer); observer.disconnect() }
-  }, [containerRef, computeConnections, estados, estadosSimulados])
+  }, [containerRef, computeConnections, estados, estadosSimulados, zoom])
 
   const criticalPathIds = showCriticalPath ? computeCriticalPath(getEstado) : []
   const criticalPathSet = new Set(criticalPathIds)
 
-  const getLineStyle = (conn: Connection) => {
+  // All active IDs: pinned + hovered
+  const activeIds = new Set([
+    ...pinnedMaterias,
+    ...(hoveredMateria ? [hoveredMateria] : []),
+  ])
+
+  const getLineColor = (conn: Connection) => {
     const reqEstado = getEstado(conn.fromId)
-    if (conn.type === 'aprobada') {
-      if (reqEstado === 'aprobada') return { stroke: '#10B981', dasharray: '' }
-      if (reqEstado === 'regularizada' || reqEstado === 'cursando') return { stroke: '#F97316', dasharray: '6 4' }
-      return { stroke: '#DC2626', dasharray: '6 4' }
-    }
-    if (reqEstado === 'aprobada' || reqEstado === 'regularizada' || reqEstado === 'cursando')
-      return { stroke: reqEstado === 'aprobada' ? '#10B981' : '#F59E0B', dasharray: '' }
-    return { stroke: '#DC2626', dasharray: '6 4' }
+    const met = conn.type === 'aprobada' ? reqEstado === 'aprobada' : cumpleCursada(reqEstado)
+    if (met) return '#10b981'
+    if (cumpleCursada(reqEstado)) return '#f59e0b'
+    return '#a1a1aa'
   }
 
-  const isConnected = (conn: Connection) => !hoveredMateria || conn.fromId === hoveredMateria || conn.toId === hoveredMateria
+  const isMet = (conn: Connection) => {
+    const reqEstado = getEstado(conn.fromId)
+    return conn.type === 'aprobada' ? reqEstado === 'aprobada' : cumpleCursada(reqEstado)
+  }
+
+  const isConnected = (conn: Connection) =>
+    activeIds.has(conn.fromId) || activeIds.has(conn.toId)
 
   return (
-    <svg className="absolute inset-0 pointer-events-none z-0" width={dimensions.w} height={dimensions.h} style={{ overflow: 'visible' }}>
+    <svg className="absolute inset-0 pointer-events-none" width={dimensions.w} height={dimensions.h} style={{ overflow: 'visible' }}>
+      <defs>
+        <marker id="arrow-green" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0L8 3L0 6Z" fill="#10b981" />
+        </marker>
+        <marker id="arrow-amber" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0L8 3L0 6Z" fill="#f59e0b" />
+        </marker>
+        <marker id="arrow-zinc" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0L8 3L0 6Z" fill="#a1a1aa" />
+        </marker>
+      </defs>
+
       {connections.map((conn, i) => {
-        const style = getLineStyle(conn)
         const connected = isConnected(conn)
-        return <path key={`${conn.fromId}-${conn.toId}-${conn.type}-${i}`} d={conn.path} fill="none" stroke={style.stroke} strokeWidth={connected ? 1.5 : 1} strokeDasharray={style.dasharray} opacity={connected ? 0.7 : 0.06} className="transition-all duration-300" />
+        if (!connected && !showCriticalPath) return null
+        const color = getLineColor(conn)
+        const met = isMet(conn)
+        const markerEnd = color === '#10b981' ? 'url(#arrow-green)' : color === '#f59e0b' ? 'url(#arrow-amber)' : 'url(#arrow-zinc)'
+
+        return (
+          <path
+            key={`${conn.fromId}-${conn.toId}-${conn.type}-${i}`}
+            d={conn.path}
+            fill="none"
+            stroke={color}
+            strokeWidth={connected ? (conn.type === 'aprobada' ? 2.5 : 1.5) : 0.5}
+            strokeDasharray={conn.type === 'aprobada' && connected ? '' : met ? '' : '3 3'}
+            opacity={connected ? 0.7 : 0.04}
+            markerEnd={connected ? markerEnd : undefined}
+            className="transition-all duration-200"
+          />
+        )
       })}
-      {showCriticalPath && connections.filter((c) => criticalPathSet.has(c.fromId) && criticalPathSet.has(c.toId)).map((conn, i) => (
-        <path key={`crit-${conn.fromId}-${conn.toId}-${i}`} d={conn.path} fill="none" stroke="#D97706" strokeWidth={4} opacity={0.8} className="transition-all duration-300" />
-      ))}
+      {showCriticalPath &&
+        connections
+          .filter((c) => criticalPathSet.has(c.fromId) && criticalPathSet.has(c.toId))
+          .map((conn, i) => (
+            <path
+              key={`crit-${conn.fromId}-${conn.toId}-${i}`}
+              d={conn.path}
+              fill="none"
+              stroke="#d97706"
+              strokeWidth={2.5}
+              opacity={0.7}
+              className="transition-all duration-300"
+            />
+          ))}
     </svg>
   )
 }

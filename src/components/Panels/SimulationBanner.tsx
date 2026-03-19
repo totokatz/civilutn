@@ -6,20 +6,36 @@ export function SimulationBanner() {
   const limpiarSimulacion = useCarreraStore((s) => s.limpiarSimulacion)
   const aplicarSimulacion = useCarreraStore((s) => s.aplicarSimulacion)
 
-  const simulatedNames = Object.keys(estadosSimulados).map((id) => materiasMap.get(id)?.nombreCorto).filter(Boolean)
+  const simulatedNames = Object.keys(estadosSimulados)
+    .map((id) => materiasMap.get(id)?.nombreCorto)
+    .filter(Boolean)
 
   return (
-    <div className="sticky top-0 z-20 bg-amber-50 dark:bg-amber-900/30 border-b-2 border-amber-400 px-6 py-3 flex items-center justify-between">
+    <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-6 py-3 flex items-center justify-between">
       <div>
-        <span className="text-sm font-bold text-amber-800 dark:text-amber-200">🔮 Modo Simulación</span>
-        <span className="text-xs text-amber-600 dark:text-amber-300 ml-2">Los cambios no se guardan. Estás explorando posibilidades.</span>
+        <span className="text-sm font-medium text-amber-800">Modo Simulación</span>
+        <span className="text-xs text-amber-600 ml-2">
+          Explorando posibilidades — los cambios no se guardan.
+        </span>
         {simulatedNames.length > 0 && (
-          <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">Simulando: {simulatedNames.join(', ')}</p>
+          <p className="text-xs text-amber-700 mt-1">
+            Simulando: {simulatedNames.join(', ')}
+          </p>
         )}
       </div>
       <div className="flex gap-2">
-        <button onClick={aplicarSimulacion} className="px-3 py-1.5 text-xs bg-success text-white rounded-lg hover:bg-success-dark font-medium">Aplicar cambios</button>
-        <button onClick={limpiarSimulacion} className="px-3 py-1.5 text-xs bg-white dark:bg-gray-700 text-amber-800 dark:text-amber-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 font-medium">Limpiar simulación</button>
+        <button
+          onClick={aplicarSimulacion}
+          className="px-3 py-1.5 text-xs bg-estado-aprobada text-white rounded-sm hover:opacity-90 transition-opacity font-medium"
+        >
+          Aplicar cambios
+        </button>
+        <button
+          onClick={limpiarSimulacion}
+          className="px-3 py-1.5 text-xs border border-amber-300 text-amber-700 rounded-sm hover:bg-amber-100 transition-colors font-medium"
+        >
+          Limpiar
+        </button>
       </div>
     </div>
   )

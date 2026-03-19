@@ -12,14 +12,15 @@ interface CarreraStore {
   hoveredMateria: string | null
   selectedMateria: string | null
   searchQuery: string
-  darkMode: boolean
   showCriticalPath: boolean
+  pinnedMaterias: string[]
+  togglePin: (id: string) => void
+  clearPins: () => void
   setEstado: (id: string, estado: EstadoMateria) => void
   cycleEstado: (id: string) => void
   setHovered: (id: string | null) => void
   setSelected: (id: string | null) => void
   setSearchQuery: (query: string) => void
-  toggleDarkMode: () => void
   toggleSimulacion: () => void
   simularEstado: (id: string, estado: EstadoMateria) => void
   aplicarSimulacion: () => void
@@ -56,8 +57,17 @@ export const useCarreraStore = create<CarreraStore>()(
       hoveredMateria: null,
       selectedMateria: null,
       searchQuery: '',
-      darkMode: false,
       showCriticalPath: false,
+      pinnedMaterias: [],
+
+      togglePin: (id) =>
+        set((s) => ({
+          pinnedMaterias: s.pinnedMaterias.includes(id)
+            ? s.pinnedMaterias.filter((p) => p !== id)
+            : [...s.pinnedMaterias, id],
+        })),
+
+      clearPins: () => set({ pinnedMaterias: [] }),
 
       setEstado: (id, estado) =>
         set((s) => ({ estados: { ...s.estados, [id]: estado } })),
@@ -77,7 +87,6 @@ export const useCarreraStore = create<CarreraStore>()(
       setHovered: (id) => set({ hoveredMateria: id }),
       setSelected: (id) => set({ selectedMateria: id }),
       setSearchQuery: (query) => set({ searchQuery: query }),
-      toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
       toggleCriticalPath: () => set((s) => ({ showCriticalPath: !s.showCriticalPath })),
 
       toggleSimulacion: () =>
@@ -159,7 +168,7 @@ export const useCarreraStore = create<CarreraStore>()(
     }),
     {
       name: 'carrera-ic-utn',
-      partialize: (s) => ({ estados: s.estados, darkMode: s.darkMode }),
+      partialize: (s) => ({ estados: s.estados }),
     }
   )
 )
