@@ -42,11 +42,11 @@ export function SubjectCard({ materia }: SubjectCardProps) {
   const isBloqueada = estado === 'pendiente' && disponibilidad === 'bloqueada'
   const isDisponible = estado === 'pendiente' && disponibilidad === 'disponible' && (materia.requiereCursadas.length > 0 || materia.requiereAprobadas.length > 0)
 
-  // All active IDs: pinned + hovered
-  const activeIds = [
-    ...pinnedMaterias,
-    ...(hoveredMateria && !pinnedMaterias.includes(hoveredMateria) ? [hoveredMateria] : []),
-  ]
+  // When pinned, ignore hover — focus only on the pinned card
+  const hasPinned = pinnedMaterias.length > 0
+  const activeIds = hasPinned
+    ? pinnedMaterias
+    : hoveredMateria ? [hoveredMateria] : []
 
   // Connection tags from all active cards
   const connectionTags: { label: string; met: boolean }[] = []

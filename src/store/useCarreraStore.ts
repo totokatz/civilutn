@@ -62,9 +62,7 @@ export const useCarreraStore = create<CarreraStore>()(
 
       togglePin: (id) =>
         set((s) => ({
-          pinnedMaterias: s.pinnedMaterias.includes(id)
-            ? s.pinnedMaterias.filter((p) => p !== id)
-            : [...s.pinnedMaterias, id],
+          pinnedMaterias: s.pinnedMaterias.includes(id) ? [] : [id],
         })),
 
       clearPins: () => set({ pinnedMaterias: [] }),

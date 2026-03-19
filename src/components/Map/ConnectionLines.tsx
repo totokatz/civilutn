@@ -77,11 +77,9 @@ export function ConnectionLines({ containerRef, zoom }: ConnectionLinesProps) {
   const criticalPathIds = showCriticalPath ? computeCriticalPath(getEstado) : []
   const criticalPathSet = new Set(criticalPathIds)
 
-  // All active IDs: pinned + hovered
-  const activeIds = new Set([
-    ...pinnedMaterias,
-    ...(hoveredMateria ? [hoveredMateria] : []),
-  ])
+  // When pinned, ignore hover
+  const hasPinned = pinnedMaterias.length > 0
+  const activeIds = new Set(hasPinned ? pinnedMaterias : hoveredMateria ? [hoveredMateria] : [])
 
   const getLineColor = (conn: Connection) => {
     const reqEstado = getEstado(conn.fromId)
