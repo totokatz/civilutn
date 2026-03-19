@@ -133,9 +133,9 @@ export function SubjectCard({ materia }: SubjectCardProps) {
             <span
               key={i}
               className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-sm ${
-                tag.met
-                  ? 'bg-estado-aprobada/10 text-estado-aprobada'
-                  : 'bg-amber-50 text-amber-600'
+                tag.label === 'Aprobada'
+                  ? tag.met ? 'bg-orange-100 text-orange-700' : 'bg-orange-50 text-orange-500'
+                  : tag.met ? 'bg-blue-100 text-blue-700' : 'bg-blue-50 text-blue-400'
               }`}
             >
               {tag.label} {tag.met ? '✓' : '✗'}
