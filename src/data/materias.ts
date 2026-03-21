@@ -56,7 +56,7 @@ export const materias: Materia[] = [
   // Perfil Ambiental
   { id: 'e_pus', codigo: '95-0280', nombre: 'Planificación Urbana Sustentable', nombreCorto: 'Plan. Urbana Sust.', nivel: 6, horas: 3, tipo: 'A', requiereCursadas: ['dapu', 'eh'], requiereAprobadas: ['tc', 'th', 'rm'], esElectiva: true, perfilElectiva: ['ambiental', 'construcciones'] },
   { id: 'e_er', codigo: '95-0272', nombre: 'Energías Renovables', nombreCorto: 'Energías Renov.', nivel: 6, horas: 4, tipo: 'A', requiereCursadas: ['dapu'], requiereAprobadas: ['am2', 'itm'], esElectiva: true, perfilElectiva: ['ambiental'] },
-  { id: 'e_csa', codigo: '95-0271', nombre: 'Contaminación y Saneamiento Ambiental', nombreCorto: 'Contam. y Sanea.', nivel: 6, horas: 4, tipo: 'C', requiereCursadas: ['hoh', 'hga'], requiereAprobadas: ['il'], esElectiva: true, perfilElectiva: ['ambiental'] },
+  { id: 'e_csa', codigo: '--', nombre: 'Contaminación y Saneamiento Ambiental', nombreCorto: 'Contam. y Sanea.', nivel: 6, horas: 4, tipo: 'C', requiereCursadas: ['hoh'], requiereAprobadas: ['il'], esElectiva: true, perfilElectiva: ['ambiental'] },
   { id: 'e_gca', codigo: '--', nombre: 'Gestión y Calidad del Agua', nombreCorto: 'Gest. Calidad Agua', nivel: 6, horas: 4, tipo: 'C', requiereCursadas: ['isg', 'hoh'], requiereAprobadas: ['il'], esElectiva: true, perfilElectiva: ['ambiental'] },
   // Perfil Construcciones
   { id: 'e_pref', codigo: '95-0249', nombre: 'Prefabricación', nombreCorto: 'Prefabricación', nivel: 6, horas: 2, tipo: 'A', requiereCursadas: ['th', 'eh'], requiereAprobadas: ['tc'], esElectiva: true, perfilElectiva: ['construcciones'] },
@@ -64,7 +64,7 @@ export const materias: Materia[] = [
   { id: 'e_ee', codigo: '95-0284', nombre: 'Estructuras Especiales', nombreCorto: 'Estruc. Especiales', nivel: 6, horas: 6, tipo: 'C', requiereCursadas: ['ae2'], requiereAprobadas: ['ae1', 'eh'], esElectiva: true, perfilElectiva: ['construcciones'] },
   { id: 'e_tgp', codigo: '95-0281', nombre: 'Túneles y Grandes Puentes', nombreCorto: 'Túneles y Puentes', nivel: 6, horas: 6, tipo: 'C', requiereCursadas: ['vc1', 'ae2', 'cim'], requiereAprobadas: ['hga', 'tc', 'th', 'gt'], esElectiva: true, perfilElectiva: ['construcciones'] },
   // Perfil Vías de Comunicación
-  { id: 'e_ga', codigo: '95-0276', nombre: 'Geología Aplicada', nombreCorto: 'Geología Aplic.', nivel: 6, horas: 3, tipo: 'A', requiereCursadas: ['gt', 'eh', 'hga'], requiereAprobadas: ['geo'], esElectiva: true, perfilElectiva: ['vias', 'hidraulica'] },
+  { id: 'e_ga', codigo: '95-0276', nombre: 'Geología Aplicada', nombreCorto: 'Geología Aplic.', nivel: 6, horas: 3, tipo: 'A', requiereCursadas: ['gt', 'eh'], requiereAprobadas: ['hga'], esElectiva: true, perfilElectiva: ['vias', 'hidraulica'] },
   { id: 'e_pvn', codigo: '95-0258', nombre: 'Puertos y Vías Navegables', nombreCorto: 'Puertos y Vías Nav.', nivel: 6, horas: 3, tipo: 'A', requiereCursadas: ['hga', 'gt', 'eh'], requiereAprobadas: ['geo'], esElectiva: true, perfilElectiva: ['vias', 'hidraulica'] },
   { id: 'e_fc', codigo: '95-0256', nombre: 'Ferrocarriles', nombreCorto: 'Ferrocarriles', nivel: 6, horas: 2, tipo: 'A', requiereCursadas: ['gt', 'vc1'], requiereAprobadas: ['ic2', 'rm', 'geo'], esElectiva: true, perfilElectiva: ['vias'] },
   { id: 'e_cc', codigo: '95-0241', nombre: 'Construcción de Carreteras', nombreCorto: 'Constr. Carreteras', nivel: 6, horas: 4, tipo: 'C', requiereCursadas: ['vc1'], requiereAprobadas: ['th', 'hga', 'tc', 'gt'], esElectiva: true, perfilElectiva: ['vias'] },
