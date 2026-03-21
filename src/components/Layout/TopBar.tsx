@@ -15,6 +15,8 @@ export function TopBar() {
   const resetAll = useCarreraStore((s) => s.resetAll)
   const searchQuery = useCarreraStore((s) => s.searchQuery)
   const setSearchQuery = useCarreraStore((s) => s.setSearchQuery)
+  const email = useCarreraStore((s) => s.email)
+  const logout = useCarreraStore((s) => s.logout)
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -195,6 +197,14 @@ export function TopBar() {
                     </button>
                     <button onClick={handleImport} className="w-full text-left px-4 py-2.5 text-sm text-text-primary hover:bg-background transition-colors">
                       Importar progreso
+                    </button>
+                    <div className="border-t border-border my-1" />
+                    <div className="px-4 py-2 text-xs text-text-tertiary truncate">{email}</div>
+                    <button
+                      onClick={() => { logout(); setSettingsOpen(false) }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:bg-background transition-colors"
+                    >
+                      Cerrar sesion
                     </button>
                     <div className="border-t border-border my-1" />
                     <button onClick={() => { if (confirm('Resetear todo el progreso?')) { resetAll(); setSettingsOpen(false) } }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">

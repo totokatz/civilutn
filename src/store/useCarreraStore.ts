@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, subscribeWithSelector } from 'zustand/middleware'
+import { supabase } from '../lib/supabase'
 import { type EstadoMateria } from '../types/materia'
 import { materias, materiasMap } from '../data/materias'
 
@@ -14,6 +15,10 @@ interface CarreraStore {
   searchQuery: string
   showCriticalPath: boolean
   pinnedMaterias: string[]
+  email: string | null
+  loading: boolean
+  login: (email: string) => Promise<void>
+  logout: () => void
   togglePin: (id: string) => void
   clearPins: () => void
   setEstado: (id: string, estado: EstadoMateria) => void
@@ -49,7 +54,8 @@ const defaultEstados: Record<string, EstadoMateria> = Object.fromEntries(
 )
 
 export const useCarreraStore = create<CarreraStore>()(
-  persist(
+  subscribeWithSelector(
+    persist(
     (set, get) => ({
       estados: { ...defaultEstados },
       modoSimulacion: false,
@@ -59,6 +65,8 @@ export const useCarreraStore = create<CarreraStore>()(
       searchQuery: '',
       showCriticalPath: false,
       pinnedMaterias: [],
+      email: null,
+      loading: false,
 
       togglePin: (id) =>
         set((s) => ({
@@ -68,6 +76,47 @@ export const useCarreraStore = create<CarreraStore>()(
         })),
 
       clearPins: () => set({ pinnedMaterias: [] }),
+
+      login: async (email) => {
+        set({ loading: true })
+
+        const { data } = await supabase
+          .from('user_progress')
+          .select('estados')
+          .eq('email', email)
+          .single()
+
+        if (data) {
+          set({ email, estados: { ...defaultEstados, ...data.estados }, loading: false })
+        } else {
+          const estados = get().estados
+          await supabase.from('user_progress').insert({ email, estados })
+          set({ email, loading: false })
+        }
+
+        localStorage.setItem('carrera-email', email)
+
+        supabase
+          .channel('user_progress_sync')
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'user_progress', filter: `email=eq.${email}` },
+            (payload) => {
+              const remoteEstados = payload.new.estados as Record<string, EstadoMateria>
+              const currentEstados = get().estados
+              if (JSON.stringify(remoteEstados) !== JSON.stringify(currentEstados)) {
+                set({ estados: { ...defaultEstados, ...remoteEstados } })
+              }
+            }
+          )
+          .subscribe()
+      },
+
+      logout: () => {
+        supabase.channel('user_progress_sync').unsubscribe()
+        localStorage.removeItem('carrera-email')
+        set({ email: null, estados: { ...defaultEstados } })
+      },
 
       setEstado: (id, estado) =>
         set((s) => ({ estados: { ...s.estados, [id]: estado } })),
@@ -168,7 +217,29 @@ export const useCarreraStore = create<CarreraStore>()(
     }),
     {
       name: 'carrera-ic-utn',
-      partialize: (s) => ({ estados: s.estados }),
+      partialize: (s) => ({ estados: s.estados, email: s.email }),
     }
-  )
+  ))
 )
+
+// Debounced sync to Supabase
+let syncTimeout: ReturnType<typeof setTimeout> | null = null
+let lastSyncedEstados: string | null = null
+
+useCarreraStore.subscribe((state) => {
+  if (!state.email) return
+
+  const estadosJson = JSON.stringify(state.estados)
+  if (estadosJson === lastSyncedEstados) return
+
+  if (syncTimeout) clearTimeout(syncTimeout)
+  syncTimeout = setTimeout(() => {
+    lastSyncedEstados = estadosJson
+    supabase
+      .from('user_progress')
+      .upsert({ email: state.email, estados: state.estados })
+      .then(({ error }) => {
+        if (error) console.error('Supabase sync error:', error)
+      })
+  }, 1000)
+})
